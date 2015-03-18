@@ -84,6 +84,7 @@ plot(results, type=c("g", "o"))
 ```{r,cache=TRUE}
 #
 #Set up the control for Recursive Feature Extraction
+control <- rfeControl(functions=rfFuncs, method="cv", number=10)
 # run the RFE algorithm to compare with varImp and for cross validation
 results10 <- rfe(training[,1:53], training[,54], sizes=10, rfeControl=control)
 # summarize the results
