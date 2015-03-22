@@ -2,7 +2,7 @@
 title: "Practical Machine Learning Project"
 author: "Erasemus"
 date: "March 20, 2015"
-output: html_document
+output: pdf_document
 ---
 
 This document presents the project for the Coursera class "Practical Machine Learning" sponsored by the Bloomberg School af Health at the Johns Hopkins University and taught by Roger Peng, Brian Caffe and Jeffrey Leek.
@@ -91,6 +91,25 @@ rfCM$overall
     sum(preds != CV$classe)/length(CV$classe)
 
 ```
-
-
+```{r,cache=TRUE,echo=FALSE,eval=FALSE}
+test_file<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+myCsv <- getURL(test_file)
+temporaryFile <- tempfile()
+con <- file(temporaryFile, open = "w")
+cat(myCsv, file = con) 
+close(con)
+testData<-read.csv(temporaryFile)
+```
+```{r,cache=TRUE,echo=FALSE,eval=FALSE}
+testPreds<-predict(modelFit,testData)
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+setwd("~/practMachineLearn/project/predictions")
+pml_write_files(testPreds)
+```
 
