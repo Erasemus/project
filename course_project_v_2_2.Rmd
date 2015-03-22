@@ -23,7 +23,7 @@ The approach used to develop a predictive model for predicting the exercise and 
 Results: The random forest prediction model demonstrated accuracy in excess of 99% as determined by a confusion matrix generated against the cross validation data partition.
 The out of sample error is .3% . In addition the kappa value greater than .99 indicates a very high correlation of observed results to expected results. A plot of the random forest prediction model shows that the range of accuracy for the set of predictors chosen by the above methods is between 99% an 99.5% accuracy.
  
-```{r,echo=FALSE}
+```{r,echo=FALSE,results='hide'}
 #get all libraries required up front
 library(caret)
 library(randomForest)
