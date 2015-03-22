@@ -1,7 +1,7 @@
 ---
 title: "Practical Machine Learning Project"
 author: "Erasemus"
-date: "February 20, 2015"
+date: "March 20, 2015"
 output: html_document
 ---
 
@@ -15,21 +15,18 @@ Read more: http://groupware.les.inf.puc-rio.br/work.jsf?p1=10335#ixzz3SLM8kNln
 This assignment challenges the student to develop a predictive model for the data which was collected during the performance of specific body postures and movements.  
 Approach used to develop a predictive model and perform cross validation:  
 1. load the training data  
-2. inspect and clean and scale the data, eliminating fields with near zero variance and those with out correlation to the activity (identity of subject, time of measurement , etc.)  
-3. create a test partition to cross validate our model for predicting the depndent variable "classe"
+2. inspect and clean the data, eliminating fields with near zero variance and those with out correlation to the activity (identity of subject, time of measurement , etc.)  
+3. create a test partition to cross validate our model for predicting the dependent variable "classe"
 4. use random forest as the method for deriving a model  
-5. determine the accuracy of the model on the test data partition created in step 3  
-6. identify the variables with most impact on the model  
-7. revise the data to retain only the most impactful variables    
-8. compare the accuracy after the refinement  
-9. cross-validate with our test partition  
-10. download, clean and subset the official test data in the same way we did the training data
-```{r,cache=TRUE}
+5. determine the accuracy of the model via a confusionMatrix on the test data partition created in step 3  
+ 
+{r}
 #get all libraries required up front
 library(caret)
 library(randomForest)
 library(RCurl)
-
+```
+```{r,cache=TRUE}
 #load the training data
 myCsv <- getURL("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
 temporaryFile <- tempfile()
@@ -39,13 +36,16 @@ close(con)
 df<-read.csv(temporaryFile)
 ```
 ```{r,cache=TRUE}
-#df<-read.csv("~/practMachineLearn/pml-training.csv")
+#
 # remove variables with little or no variability
+#
 df <- df[,-nearZeroVar(df)]
-# Remove the columns that, by inspection, add no predictive value
+#
+# Remove the columns that, by inspection, add no predictive value 
+# because they have identity data or are NA filled
+#
 df <- subset(df, select=-c(X,user_name,raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,var_accel_forearm,amplitude_pitch_forearm,min_pitch_forearm,max_picth_forearm,var_yaw_dumbbell,stddev_yaw_dumbbell,avg_yaw_dumbbell,var_pitch_dumbbell,stddev_pitch_dumbbell,avg_pitch_dumbbell,var_roll_dumbbell,stddev_roll_dumbbell,avg_roll_dumbbell,var_accel_dumbbell,amplitude_pitch_dumbbell,amplitude_roll_dumbbell,min_pitch_dumbbell,min_roll_dumbbell,max_picth_dumbbell,max_roll_dumbbell,max_roll_belt,max_picth_belt,min_roll_belt,min_pitch_belt,amplitude_roll_belt,amplitude_pitch_belt,var_total_accel_belt, avg_roll_belt,stddev_roll_belt, var_roll_belt,avg_pitch_belt, stddev_pitch_belt,var_pitch_belt,avg_yaw_belt,stddev_yaw_belt,var_yaw_belt,var_accel_arm,max_picth_arm,max_yaw_arm,min_yaw_arm,amplitude_yaw_arm))
 ```
-
 create the partitions for training and cross-validation
 ```{r}
 require(caret)
@@ -60,16 +60,14 @@ modelFit<-randomForest(x=training[,1:53],y=training[,54])
 ```
 ```{r,cache=TRUE}
 preds<-predict(modelFit,CV)
+# use confusion matrix with the cross validation partition to assess the accuracy and 
+# the sample error
 rfCM<-confusionMatrix(preds,CV$classe)
 sp <- varImp(modelFit,scale=FALSE)
-rfCM
-predictors(modelFit)
-#sp<-order(sp,decreasing=TRUE)
-#print the predictors in order of importance
-#print(colnames(training[sp,]))
-plot(sp)
+rfCM$overall
+plot(modelFit)
 ```
-```{r,cache=TRUE,eval=FALSE}
+```{r,cache=TRUE,eval=FALSE,echo=FALSE}
 #Set up the control for Recursive Feature Extraction
 control <- rfeControl(functions=rfFuncs, method="cv", number=10)
 # run the RFE algorithm to compare with varImp and for cross validation
@@ -82,22 +80,7 @@ predictors(results)
 plot(results, type=c("g", "o"))
 ```
 ```{r,cache=TRUE}
-#
-#Set up the control for Recursive Feature Extraction
 control <- rfeControl(functions=rfFuncs, method="cv", number=10)
-# run the RFE algorithm to compare with varImp and for cross validation
-results10 <- rfe(training[,1:53], training[,54], sizes=10, rfeControl=control)
-# summarize the results
-##print(results)
-# list the chosen features
-predictors(results10)
-## plot the results
-plot(results10, type=c("g", "o"))
-plot.rfe(results10)
-str(results10$fit)
-summary(results10)
-```
-```{r,cache=TRUE}
 results50 <- rfe(training[,1:53], training[,54], sizes=50, rfeControl=control)
 # summarize the results
 ##print(results)
@@ -110,7 +93,7 @@ str(results50$fit)
 ```{r,cache=TRUE}
 str(sp)
 sp<-order(sp,decreasing=TRUE)
-plot(results, metric = "Rsquared")
+plot(results50, metric = "Rsquared")
 
 # summarize importance by sorting then taking the 4 most important variables
 osp<-(order(sp,decreasing=TRUE))
